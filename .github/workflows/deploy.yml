@@ -39,6 +39,8 @@ jobs:
           ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             cd ~/deploy/${{ github.event.repository.name }}
             echo "SWAGGER_SERVER_URL=${{ secrets.SWAGGER_SERVER_URL }}" > .env
+            echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
+            echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
             docker compose down --remove-orphans
             docker compose build
             docker compose up -d --remove-orphans
