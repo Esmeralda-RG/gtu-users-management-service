@@ -53,4 +53,13 @@ public class UserServiceImpl implements UserService {
         );
         return savedUser;
     }
+
+    @Override
+    public void deleteUser(Long id) {
+        userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User does not exist"));
+        userRepository.deleteById(id);
+    }
+
+    
 }

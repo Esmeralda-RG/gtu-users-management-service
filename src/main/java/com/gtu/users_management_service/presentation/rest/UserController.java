@@ -2,6 +2,8 @@ package com.gtu.users_management_service.presentation.rest;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +34,13 @@ public class UserController {
     public ResponseEntity<ResponseDTO<UserDTO>> createUser(@Valid @RequestBody UserDTO userDTO) {
         UserDTO createdUser = userUseCase.createUser(userDTO);
         return ResponseEntity.status(201).body(new ResponseDTO<>("User created successfully", createdUser, 201));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a user", description = "Remove a user from the system by its unique identifier.")
+    public ResponseEntity<ResponseDTO<Void>> deleteUser(@PathVariable Long id) {
+        userUseCase.deleteUser(id);
+        return ResponseEntity.status(200).body(new ResponseDTO<>("User deleted successfully", null, 200));
     }
 
 }

@@ -17,4 +17,8 @@ public class UserUseCase {
     public UserDTO createUser(UserDTO userDTO) {
         return UserMapper.toDTO(userService.createUser(UserMapper.toDomain(userDTO)));
     }
+
+    public void deleteUser(Long id) {
+        userService.deleteUser(id);
+    }
 }
