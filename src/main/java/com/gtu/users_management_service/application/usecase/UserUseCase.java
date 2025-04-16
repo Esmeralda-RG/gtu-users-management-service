@@ -2,6 +2,7 @@ package com.gtu.users_management_service.application.usecase;
 
 import com.gtu.users_management_service.application.dto.UserDTO;
 import com.gtu.users_management_service.application.mapper.UserMapper;
+import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.service.UserService;
 import org.springframework.stereotype.Service;
 
@@ -20,5 +21,9 @@ public class UserUseCase {
 
     public void deleteUser(Long id) {
         userService.deleteUser(id);
+    }
+
+    public UserDTO updateStatus(Long id, Status status) {
+        return UserMapper.toDTO(userService.updateStatus(id, status));
     }
 }

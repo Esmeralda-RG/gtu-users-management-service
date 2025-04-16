@@ -1,5 +1,7 @@
 package com.gtu.users_management_service.application.service;
 
+import org.springframework.stereotype.Service;
+
 import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.model.User;
 import com.gtu.users_management_service.domain.repository.UserRepository;
@@ -7,8 +9,6 @@ import com.gtu.users_management_service.domain.service.UserService;
 import com.gtu.users_management_service.infrastructure.email.EmailServiceImpl;
 import com.gtu.users_management_service.infrastructure.security.PasswordEncoderUtil;
 import com.gtu.users_management_service.infrastructure.security.PasswordValidator;
-
-import org.springframework.stereotype.Service;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -61,5 +61,16 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
-    
+    @Override
+    public User updateStatus(Long id, Status status) {
+        if (status != Status.ACTIVE && status != Status.INACTIVE) {
+            throw new IllegalArgumentException("Invalid status value. Only ACTIVE or INACTIVE are allowed.");
+        }
+
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("User does not exist"));
+        
+        user.setStatus(status);
+        return userRepository.save(user);
+    }    
 }
