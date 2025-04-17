@@ -1,18 +1,23 @@
 package com.gtu.users_management_service.presentation.rest;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gtu.users_management_service.application.dto.ResponseDTO;
 import com.gtu.users_management_service.application.dto.UserDTO;
 import com.gtu.users_management_service.application.usecase.UserUseCase;
+import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.Status;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,4 +58,10 @@ public class UserController {
         return ResponseEntity.ok(new ResponseDTO<>("User status updated successfully", updatedUser, 200));
     }
 
+    @GetMapping
+    @Operation(summary = "Get users by role", description = "Retrieve a list of users filtered by their role.")
+    public ResponseEntity<ResponseDTO<List<UserDTO>>> getUsersByRole(@RequestParam Role role) {
+        List<UserDTO> users = userUseCase.getUsersByRole(role);
+        return ResponseEntity.ok(new ResponseDTO<>("Users retrieved successfully", users, 200));
+    }
 }
