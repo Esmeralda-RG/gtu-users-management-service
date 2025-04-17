@@ -1,7 +1,10 @@
 package com.gtu.users_management_service.application.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
+import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.model.User;
 import com.gtu.users_management_service.domain.repository.UserRepository;
@@ -32,8 +35,8 @@ public class UserServiceImpl implements UserService {
         if (!PasswordValidator.isValid(user.getPassword())) {
             throw new IllegalArgumentException("Password must contain at least 8 characters, including uppercase letters and numbers");
         }
-        if (user.getRole() == null) {
-            throw new IllegalArgumentException("Role cannot be null");
+        if (user.getRole() == null && user.getRole() != Role.ADMIN && user.getRole() != Role.DRIVER) {
+            throw new IllegalArgumentException("Role cannot be null or invalid");
         }
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email is already in use");
@@ -72,5 +75,13 @@ public class UserServiceImpl implements UserService {
         
         user.setStatus(status);
         return userRepository.save(user);
+    }
+
+    @Override
+    public List<User> getUsersByRole(Role role) {
+        if (role != Role.ADMIN && role != Role.DRIVER) {
+            throw new IllegalArgumentException("Invalid role value. Only ADMIN or DRIVER are allowed.");
+        }
+        return userRepository.findByRole(role);
     }    
 }
