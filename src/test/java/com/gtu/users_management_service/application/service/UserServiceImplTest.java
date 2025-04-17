@@ -2,9 +2,13 @@ package com.gtu.users_management_service.application.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,7 +69,7 @@ class UserServiceImplTest {
     void createUser_ThrowsException_WhenNameIsEmpty() {
         user.setName("");
 
-        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userService.createUser(user));
         assertEquals("User name cannot be empty", exception.getMessage());
@@ -75,7 +79,7 @@ class UserServiceImplTest {
     void createUser_ThrowsException_WhenEmailIsEmpty() {
         user.setEmail("");
 
-        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userService.createUser(user));
         assertEquals("Email cannot be empty", exception.getMessage());
@@ -85,7 +89,7 @@ class UserServiceImplTest {
     void createUser_ThrowsException_WhenPasswordIsInvalid() {
         user.setPassword("short");
 
-        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userService.createUser(user));
         assertEquals("Password must contain at least 8 characters, including uppercase letters and numbers",
@@ -96,17 +100,17 @@ class UserServiceImplTest {
     void createUser_ThrowsException_WhenRoleIsNull() {
         user.setRole(null);
 
-        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userService.createUser(user));
-        assertEquals("Role cannot be null", exception.getMessage());
+        assertEquals("Role cannot be null or invalid", exception.getMessage());
     }
 
     @Test
     void createUser_ThrowsException_WhenEmailAlreadyExists() {
         when(userRepository.existsByEmail("carlos.perez@gtu.com")).thenReturn(true);
 
-        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userService.createUser(user));
         assertEquals("Email is already in use", exception.getMessage());
@@ -114,7 +118,7 @@ class UserServiceImplTest {
 
     @Test
     void deleteUser_Success() {
-        when(userRepository.findById(1L)).thenReturn(java.util.Optional.of(user));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         userService.deleteUser(1L);
         verify(userRepository, times(1)).findById(1L);
@@ -123,9 +127,9 @@ class UserServiceImplTest {
 
     @Test
     void deleteUser_ThrowsException_WhenUserDoesNotExist() {
-        when(userRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userService.deleteUser(1L));
 
@@ -136,7 +140,7 @@ class UserServiceImplTest {
 
     @Test
     void updateStatus_Success() {
-        when(userRepository.findById(1L)).thenReturn(java.util.Optional.of(user));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).thenReturn(user);
 
         User updatedUser = userService.updateStatus(1L, Status.INACTIVE);
@@ -149,7 +153,7 @@ class UserServiceImplTest {
 
     @Test
     void updateStatus_ThrowsException_WhenStatusIsInvalid() {
-        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userService.updateStatus(1L, null));
 
@@ -160,9 +164,9 @@ class UserServiceImplTest {
 
     @Test
     void updateStatus_ThrowsException_WhenUserDoesNotExist() {
-        when(userRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException exception = org.junit.jupiter.api.Assertions.assertThrows(
+        IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> userService.updateStatus(1L, Status.ACTIVE));
 
@@ -171,4 +175,32 @@ class UserServiceImplTest {
         verify(userRepository, times(0)).save(user);
     }
 
+    @Test
+    void getUsersByRole_Success() {
+        when(userRepository.findByRole(Role.ADMIN)).thenReturn(List.of(user));
+        List<User> users = userService.getUsersByRole(Role.ADMIN);
+
+        assertNotNull(users);
+        assertEquals(1, users.size());
+        assertEquals("Carlos Pérez", users.get(0).getName());
+        verify(userRepository, times(1)).findByRole(Role.ADMIN);
+    }
+
+    @Test
+    void getUsersByRole_ThrowsException_WhenRoleIsNull() {
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> userService.getUsersByRole(null));
+        assertEquals("Invalid role value. Only ADMIN or DRIVER are allowed.", exception.getMessage());
+    }
+
+    @Test
+    void getUsersByRole_ReturnsEmptyList_WhenNoUsersFound() {
+        when(userRepository.findByRole(Role.DRIVER)).thenReturn(List.of());
+        List<User> users = userService.getUsersByRole(Role.DRIVER);
+
+        assertNotNull(users);
+        assertEquals(0, users.size());
+        verify(userRepository, times(1)).findByRole(Role.DRIVER);
+    }
 }

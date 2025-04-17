@@ -10,6 +10,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -140,5 +142,45 @@ class UserUseCaseTest {
         assertEquals("User does not exist", exception.getMessage());
         verify(userService, times(1)).updateStatus(1L, Status.INACTIVE);
     }
-        
+
+    @Test
+    void getUsersByRole_Success() {
+        when(userService.getUsersByRole(Role.ADMIN)).thenReturn(List.of(user));
+        List<UserDTO> result = userUseCase.getUsersByRole(Role.ADMIN);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(userDto.getId(), result.get(0).getId());
+        assertEquals(userDto.getName(), result.get(0).getName());
+        assertEquals(userDto.getEmail(), result.get(0).getEmail());
+        assertEquals(userDto.getPassword(), result.get(0).getPassword());
+        assertEquals(userDto.getRole(), result.get(0).getRole());
+        assertEquals(userDto.getStatus(), result.get(0).getStatus());
+
+        verify(userService, times(1)).getUsersByRole(Role.ADMIN);
+    }
+
+    @Test
+    void getUsersByRole_ReturnsEmptyList_WhenNoUsersFound() {
+        when(userService.getUsersByRole(Role.DRIVER)).thenReturn(List.of());
+        List<UserDTO> result = userUseCase.getUsersByRole(Role.DRIVER);
+
+        assertNotNull(result);
+        assertEquals(0, result.size());
+
+        verify(userService, times(1)).getUsersByRole(Role.DRIVER);
+    }
+
+    @Test
+    void getUsersByRole_ThrowsException_WhenRoleIsInvalid() {
+        when(userService.getUsersByRole(null)).thenThrow(new IllegalArgumentException("Invalid role"));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userUseCase.getUsersByRole(null);
+        });
+
+        assertEquals("Invalid role", exception.getMessage());
+        verify(userService, times(1)).getUsersByRole(null);
+    }
+    
 }
