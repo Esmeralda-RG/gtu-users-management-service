@@ -1,9 +1,11 @@
 package com.gtu.users_management_service.infrastructure;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
+import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.User;
 import com.gtu.users_management_service.domain.repository.UserRepository;
 import com.gtu.users_management_service.infrastructure.entities.UserEntity;
@@ -33,6 +35,25 @@ public class UserRepositoryImpl implements UserRepository {
     public Optional<User> findByEmail(String email) {
         return jpaUserRepository.findByEmail(email)
                 .map(UserEntityMapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        return jpaUserRepository.findById(id)
+                .map(UserEntityMapper::toDomain);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaUserRepository.deleteById(id);
+    }
+
+    @Override
+    public List<User> findByRole(Role role) {
+        return jpaUserRepository.findByRole(role)
+                .stream()
+                .map(UserEntityMapper::toDomain)
+                .toList();
     }
     
 }

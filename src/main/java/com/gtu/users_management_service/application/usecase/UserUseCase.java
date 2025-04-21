@@ -2,7 +2,12 @@ package com.gtu.users_management_service.application.usecase;
 
 import com.gtu.users_management_service.application.dto.UserDTO;
 import com.gtu.users_management_service.application.mapper.UserMapper;
+import com.gtu.users_management_service.domain.model.Role;
+import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.service.UserService;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,5 +21,17 @@ public class UserUseCase {
 
     public UserDTO createUser(UserDTO userDTO) {
         return UserMapper.toDTO(userService.createUser(UserMapper.toDomain(userDTO)));
+    }
+
+    public void deleteUser(Long id) {
+        userService.deleteUser(id);
+    }
+
+    public UserDTO updateStatus(Long id, Status status) {
+        return UserMapper.toDTO(userService.updateStatus(id, status));
+    }
+
+    public List<UserDTO> getUsersByRole(Role role) {
+        return UserMapper.toDTOList(userService.getUsersByRole(role));
     }
 }
