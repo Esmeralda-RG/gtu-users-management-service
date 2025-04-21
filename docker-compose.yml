@@ -13,8 +13,8 @@ services:
       - DB_PASSWORD=password
       - SERVER_PORT=0
       - SWAGGER_SERVER_URL=${SWAGGER_SERVER_URL}
-      - MAIL_HOST=sandbox.smtp.mailtrap.io
-      - MAIL_PORT=2525
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
     networks:
