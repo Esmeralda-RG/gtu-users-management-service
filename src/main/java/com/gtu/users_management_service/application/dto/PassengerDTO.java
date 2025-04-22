@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "DTO that represents a passenger in the system")
 public class PassengerDTO {
-    @Schema(description = "Unique identifier of the passenger", example = "1")
+    @Schema(description = "Unique identifier of the passenger", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
     @Schema(description = "Name of the passenger", example = "John Doe")
