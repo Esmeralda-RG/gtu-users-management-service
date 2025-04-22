@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Schema(description = "DTO that represents a user in the system") 
 public class UserDTO {
-    @Schema(description = "Unique identifier of the user", example = "1")
+    @Schema(description = "Unique identifier of the user", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
     @Schema(description = "Name of the user", example = "John Doe")
