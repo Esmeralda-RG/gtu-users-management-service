@@ -16,11 +16,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.domain.model.Passenger;
 import com.gtu.users_management_service.domain.repository.PassengerRepository;
+import com.gtu.users_management_service.infrastructure.security.PasswordEncoderUtil;
+import com.gtu.users_management_service.infrastructure.security.PasswordValidator;
 
 @ExtendWith(MockitoExtension.class)
 class PassengerServiceImplTest {
@@ -143,5 +147,135 @@ class PassengerServiceImplTest {
         assertEquals("Passenger not found", exception.getMessage());
         verify(passengerRepository, times(1)).findById(1L);
         verify(passengerRepository, never()).save(any());
+    }
+
+    @Test
+    void updatePassword_Success() {
+        Passenger existingPassenger = new Passenger();
+        existingPassenger.setId(1L);
+        existingPassenger.setName("John Doe");
+        existingPassenger.setEmail("johndoe@example.com");
+        existingPassenger.setPassword("encodedPassw0rd"); 
+
+        PasswordUpdateDTO passwordUpdateDTO = new PasswordUpdateDTO();
+        passwordUpdateDTO.setNewPassword("NewPassw0rd");
+
+        when(passengerRepository.findById(1L)).thenReturn(Optional.of(existingPassenger));
+        when(passengerRepository.save(any(Passenger.class))).thenReturn(existingPassenger);
+
+        try (MockedStatic<PasswordEncoderUtil> passwordEncoderUtilMock = Mockito.mockStatic(PasswordEncoderUtil.class);
+            MockedStatic<PasswordValidator> passwordValidatorMock = Mockito.mockStatic(PasswordValidator.class)) {
+            
+            passwordEncoderUtilMock.when(() -> PasswordEncoderUtil.matches("Passw0rd", "encodedPassw0rd")).thenReturn(true);
+            passwordValidatorMock.when(() -> PasswordValidator.isValid("NewPassw0rd")).thenReturn(true);
+            passwordEncoderUtilMock.when(() -> PasswordEncoderUtil.encode("NewPassw0rd")).thenReturn("encodedNewPassw0rd");
+
+            Passenger result = passengerService.updatePassword(passenger, passwordUpdateDTO);
+
+            assertNotNull(result);
+            assertEquals("encodedNewPassw0rd", result.getPassword());
+            verify(passengerRepository, times(1)).findById(1L);
+            verify(passengerRepository, times(1)).save(any(Passenger.class));
+        }
+    }
+
+    @Test
+    void updatePassword_PassengerNotFound() {
+        PasswordUpdateDTO passwordUpdateDTO = new PasswordUpdateDTO();
+        passwordUpdateDTO.setNewPassword("NewPassw0rd");
+
+        when(passengerRepository.findById(1L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            passengerService.updatePassword(passenger, passwordUpdateDTO);
+        });
+
+        assertEquals("Passenger not found", exception.getMessage());
+        verify(passengerRepository, times(1)).findById(1L);
+        verify(passengerRepository, never()).save(any());
+    }
+
+    @Test
+    void updatePassword_IncorrectCurrentPassword() {
+        Passenger existingPassenger = new Passenger();
+        existingPassenger.setId(1L);
+        existingPassenger.setPassword(PasswordEncoderUtil.encode("Passw0rd"));
+
+        PasswordUpdateDTO passwordUpdateDTO = new PasswordUpdateDTO();
+        passwordUpdateDTO.setNewPassword("NewPassw0rd");
+        when(passengerRepository.findById(1L)).thenReturn(Optional.of(existingPassenger));
+
+        try (MockedStatic<PasswordEncoderUtil> passwordEncoderUtilMock = Mockito.mockStatic(PasswordEncoderUtil.class);
+            MockedStatic<PasswordValidator> passwordValidatorMock = Mockito.mockStatic(PasswordValidator.class)) {
+            passwordEncoderUtilMock.when(() -> PasswordEncoderUtil.matches("Passw0rd", existingPassenger.getPassword())).thenReturn(false);
+
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+                passengerService.updatePassword(passenger, passwordUpdateDTO);
+            });
+
+            assertEquals("Current password is incorrect", exception.getMessage());
+            verify(passengerRepository, times(1)).findById(1L);
+            verify(passengerRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void updatePassword_NullNewPassword() {
+        Passenger existingPassenger = new Passenger();
+        existingPassenger.setId(1L);
+        existingPassenger.setPassword(PasswordEncoderUtil.encode("Passw0rd"));
+
+        PasswordUpdateDTO passwordUpdateDTO = new PasswordUpdateDTO();
+        passwordUpdateDTO.setNewPassword(null);
+        when(passengerRepository.findById(1L)).thenReturn(Optional.of(existingPassenger));
+
+        try (MockedStatic<PasswordEncoderUtil> passwordEncoderUtilMock = Mockito.mockStatic(PasswordEncoderUtil.class);
+            MockedStatic<PasswordValidator> passwordValidatorMock = Mockito.mockStatic(PasswordValidator.class)) {
+            passwordEncoderUtilMock.when(() -> PasswordEncoderUtil.matches("Passw0rd", existingPassenger.getPassword())).thenReturn(true);
+
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+                passengerService.updatePassword(passenger, passwordUpdateDTO);
+            });
+    
+            assertEquals("New password cannot be null or empty", exception.getMessage());
+            verify(passengerRepository, times(1)).findById(1L);
+            verify(passengerRepository, never()).save(any());
+
+        }   
+    }
+
+    @Test
+    void updatePassword_InvalidNewPassword() {
+        Passenger existingPassenger = new Passenger();
+        existingPassenger.setId(1L);
+        existingPassenger.setPassword(PasswordEncoderUtil.encode("Passw0rd"));
+
+        PasswordUpdateDTO passwordUpdateDTO = new PasswordUpdateDTO();
+        passwordUpdateDTO.setNewPassword("invalid");
+        when(passengerRepository.findById(1L)).thenReturn(Optional.of(existingPassenger));
+
+        try (MockedStatic<PasswordEncoderUtil> passwordEncoderUtilMock = Mockito.mockStatic(PasswordEncoderUtil.class);
+            MockedStatic<PasswordValidator> passwordValidatorMock = Mockito.mockStatic(PasswordValidator.class)) {
+            passwordEncoderUtilMock.when(() -> PasswordEncoderUtil.matches("Passw0rd", existingPassenger.getPassword())).thenReturn(true);
+            passwordValidatorMock.when(() -> PasswordValidator.isValid("invalid")).thenReturn(false);
+
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+                passengerService.updatePassword(passenger, passwordUpdateDTO);
+            });
+            
+            assertEquals("New password must contain at least 8 characters, including uppercase letters and numbers", exception.getMessage());
+            verify(passengerRepository, times(1)).findById(1L);
+            verify(passengerRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void countPassengers_Success() {
+        when(passengerRepository.count()).thenReturn(5L);
+
+        Long count = passengerService.countPassengers();
+
+        assertEquals(5L, count);
+        verify(passengerRepository, times(1)).count();
     }
 }
