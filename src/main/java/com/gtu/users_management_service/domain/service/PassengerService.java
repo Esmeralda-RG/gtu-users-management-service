@@ -7,4 +7,5 @@ public interface PassengerService {
     Passenger createPassenger(Passenger passenger);
     Passenger updatePassenger(Passenger passenger);
     Passenger updatePassword(Passenger passenger, PasswordUpdateDTO passwordUpdateDTO);
+    Long countPassengers();
 }

@@ -9,4 +9,5 @@ public interface PassengerRepository {
     boolean existsByEmail(String email);
     boolean existsById(Long id);
     Optional<Passenger> findById(Long id);
+    Long count();
 }

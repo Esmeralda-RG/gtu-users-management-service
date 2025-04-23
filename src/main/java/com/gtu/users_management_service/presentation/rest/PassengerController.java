@@ -2,6 +2,7 @@ package com.gtu.users_management_service.presentation.rest;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -54,5 +55,12 @@ public class PassengerController {
         passengerDTO.setPassword(passwordUpdateDTO.getCurrentPassword());
         PassengerDTO updatedPassenger = passengerUseCase.updatePassword(passengerDTO, passwordUpdateDTO);
         return ResponseEntity.ok(new ResponseDTO<>("Passenger password updated successfully", updatedPassenger, 200));
+    }
+
+    @GetMapping("/count")
+    @Operation(summary = "Count passengers", description = "Get the total number of passengers.")
+    public ResponseEntity<ResponseDTO<Long>> countPassengers() {
+        Long count = passengerUseCase.countPassengers();
+        return ResponseEntity.ok(new ResponseDTO<>("Total number of passengers", count, 200));
     }
 }

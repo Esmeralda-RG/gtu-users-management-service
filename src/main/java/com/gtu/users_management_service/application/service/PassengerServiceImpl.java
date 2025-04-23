@@ -75,4 +75,9 @@ public class PassengerServiceImpl implements PassengerService {
         existingPassenger.setPassword(PasswordEncoderUtil.encode(passwordUpdateDTO.getNewPassword()));
         return passengerRepository.save(existingPassenger);
     }
+
+    @Override
+    public Long countPassengers() {
+        return passengerRepository.count();
+    }
 }

@@ -39,4 +39,9 @@ public class PassengerRepositoryImpl implements PassengerRepository{
         return jpaPassengerRepository.findById(id)
                 .map(PassengerEntityMapper::toDomain);
     }
+
+    @Override
+    public Long count() {
+        return jpaPassengerRepository.count();
+    }
 }

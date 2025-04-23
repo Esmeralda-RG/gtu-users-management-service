@@ -40,4 +40,8 @@ public class PassengerUseCase {
             )
         );
     }
+    
+    public Long countPassengers() {
+        return passengerService.countPassengers();
+    }
 }
