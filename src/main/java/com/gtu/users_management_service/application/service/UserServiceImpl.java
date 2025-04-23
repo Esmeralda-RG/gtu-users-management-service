@@ -82,6 +82,10 @@ public class UserServiceImpl implements UserService {
         if (role != Role.ADMIN && role != Role.DRIVER) {
             throw new IllegalArgumentException("Invalid role value. Only ADMIN or DRIVER are allowed.");
         }
-        return userRepository.findByRole(role);
+        List<User> users = userRepository.findByRole(role);
+        for (User user : users) {
+            user.setPassword(null);
+        }
+        return users;
     }    
 }
