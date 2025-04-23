@@ -44,6 +44,7 @@ class PassengerUseCaseTest {
         passengerDTO.setId(1L);
         passengerDTO.setName("John Doe");
         passengerDTO.setEmail("johndoe@example.com");
+        
         passwordUpdateDTO = new PasswordUpdateDTO();
         passwordUpdateDTO.setCurrentPassword("Passw0rd");
         passwordUpdateDTO.setNewPassword("NewPassw0rd");
