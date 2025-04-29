@@ -26,7 +26,7 @@ public class PassengerRepositoryImpl implements PassengerRepository{
 
     @Override
     public boolean existsByEmail(String email) {
-        return jpaPassengerRepository.existsByEmail(email);
+        return jpaPassengerRepository.findByEmail(email).isPresent();
     }
 
     @Override
@@ -43,5 +43,12 @@ public class PassengerRepositoryImpl implements PassengerRepository{
     @Override
     public Long count() {
         return jpaPassengerRepository.count();
+    }
+
+    @Override
+    public Optional<Passenger> findByEmail(String email) {
+        return jpaPassengerRepository.findByEmail(email)
+                .map(PassengerEntityMapper::toDomain);
+                
     }
 }
