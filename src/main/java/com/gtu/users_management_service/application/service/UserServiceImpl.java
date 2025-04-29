@@ -16,6 +16,8 @@ import com.gtu.users_management_service.infrastructure.security.PasswordValidato
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final String USER_NOT_FOUND = "User does not exist";
+
     private final UserRepository userRepository;
     private final EmailServiceImpl emailService;
 
@@ -60,7 +62,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long id) {
         userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
         userRepository.deleteById(id);
     }
 
@@ -71,7 +73,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("User does not exist"));
+            .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
         
         user.setStatus(status);
         return userRepository.save(user);
@@ -92,6 +94,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User does not exist"));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
     }    
 }
