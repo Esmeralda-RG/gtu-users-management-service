@@ -87,5 +87,11 @@ public class UserServiceImpl implements UserService {
             user.setPassword(null);
         }
         return users;
+    }
+
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User does not exist"));
     }    
 }

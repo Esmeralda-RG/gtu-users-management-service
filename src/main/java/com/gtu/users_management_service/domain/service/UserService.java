@@ -11,4 +11,5 @@ public interface UserService {
     void deleteUser(Long id);
     User updateStatus(Long id, Status status);
     List<User> getUsersByRole(Role role);
+    User getUserByEmail(String email);
 }
