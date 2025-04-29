@@ -27,7 +27,7 @@ public class UserDTO {
     @NotEmpty(message = "Email cannot be empty")
     private String email;
 
-    @Schema(description = "Password of the user", example = "Passw0rd")
+    @Schema(description = "Password of the user", example = "Passw0rd", accessMode = Schema.AccessMode.WRITE_ONLY)
     @NotEmpty(message = "Password cannot be empty")
     private String password;
 

@@ -14,6 +14,8 @@ public class PassengerServiceImpl implements PassengerService {
 
     private final PassengerRepository passengerRepository;
 
+    private static final String NOT_FOUND_MESSAGE = "Passenger not found";
+
     public PassengerServiceImpl(PassengerRepository passengerRepository) {
         this.passengerRepository = passengerRepository;
     }
@@ -40,7 +42,7 @@ public class PassengerServiceImpl implements PassengerService {
     @Override
     public Passenger updatePassenger(Passenger passenger) {
         Passenger existingPassenger = passengerRepository.findById(passenger.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Passenger not found"));
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE));
         if (passenger.getName() != null && !passenger.getName().isEmpty()) {
             existingPassenger.setName(passenger.getName());
         }
@@ -59,7 +61,7 @@ public class PassengerServiceImpl implements PassengerService {
     @Override
     public Passenger updatePassword(Passenger passenger, PasswordUpdateDTO passwordUpdateDTO) {
         Passenger existingPassenger = passengerRepository.findById(passenger.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Passenger not found"));
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE));
         if(passenger.getPassword() == null || passenger.getPassword().isEmpty()) {
             throw new IllegalArgumentException("Current password cannot be null or empty");
         }
@@ -79,5 +81,11 @@ public class PassengerServiceImpl implements PassengerService {
     @Override
     public Long countPassengers() {
         return passengerRepository.count();
+    }
+
+    @Override
+    public Passenger getPassengerByEmail(String email) {
+       return passengerRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE));
     }
 }
