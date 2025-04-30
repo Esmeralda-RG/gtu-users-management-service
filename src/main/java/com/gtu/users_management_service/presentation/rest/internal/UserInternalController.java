@@ -12,12 +12,12 @@ import io.swagger.v3.oas.annotations.Hidden;
 @RestController
 @RequestMapping("/internal/users")
 @Hidden
-public class UserController {
+public class UserInternalController {
     
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    public UserInternalController(UserService userService) {
         this.userService = userService;
     }
 

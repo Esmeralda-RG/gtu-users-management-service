@@ -12,11 +12,11 @@ import io.swagger.v3.oas.annotations.Hidden;
 @RestController
 @RequestMapping("/internal/passengers")
 @Hidden
-public class PassengerController {
+public class PassengerInternalController {
 
     private final PassengerService passengerService;
 
-    public PassengerController(PassengerService passengerService) {
+    public PassengerInternalController(PassengerService passengerService) {
         this.passengerService = passengerService;
     }
 
