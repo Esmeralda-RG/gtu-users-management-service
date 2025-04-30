@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.model.User;
@@ -88,4 +89,24 @@ public class UserServiceImpl implements UserService {
         }
         return users;
     }    
+
+    @Override
+    public User updatePassword(User user, PasswordUpdateDTO passwordUpdateDTO) {
+        User existingUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Passenger not found"));
+        if(user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Current password cannot be null or empty");
+        }
+        if (!PasswordEncoderUtil.matches(user.getPassword(), existingUser.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        if (passwordUpdateDTO.getNewPassword() == null || passwordUpdateDTO.getNewPassword().isEmpty()) {
+            throw new IllegalArgumentException("New password cannot be null or empty");
+        }
+        if (!PasswordValidator.isValid(passwordUpdateDTO.getNewPassword())) {
+            throw new IllegalArgumentException("New password must contain at least 8 characters, including uppercase letters and numbers");
+        }
+        existingUser.setPassword(PasswordEncoderUtil.encode(passwordUpdateDTO.getNewPassword()));
+        return userRepository.save(existingUser);
+    }
 }
