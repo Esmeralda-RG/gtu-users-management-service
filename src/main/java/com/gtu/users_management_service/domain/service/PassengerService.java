@@ -8,4 +8,5 @@ public interface PassengerService {
     Passenger updatePassenger(Passenger passenger);
     Passenger updatePassword(Passenger passenger, PasswordUpdateDTO passwordUpdateDTO);
     Long countPassengers();
+    Passenger getPassengerByEmail(String email);
 }

@@ -19,6 +19,6 @@ public class PassengerDTO {
     @Schema(description = "Email of the passenger", example = "johndoe@example.com")
     private String email;
 
-    @Schema(description = "Password of the passenger", example = "Passw0rd")
+    @Schema(description = "Password of the passenger", example = "Passw0rd" , accessMode = Schema.AccessMode.WRITE_ONLY)
     private String password;
 }
