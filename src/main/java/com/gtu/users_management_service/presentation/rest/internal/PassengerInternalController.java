@@ -8,6 +8,8 @@ import com.gtu.users_management_service.domain.model.Passenger;
 import com.gtu.users_management_service.domain.service.PassengerService;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 @RestController
 @RequestMapping("/internal/passengers")
@@ -21,7 +23,7 @@ public class PassengerInternalController {
     }
 
 
-
+    @GetMapping 
     public Passenger getPassengerByEmail(@RequestParam String email){
         return passengerService.getPassengerByEmail(email);
     }

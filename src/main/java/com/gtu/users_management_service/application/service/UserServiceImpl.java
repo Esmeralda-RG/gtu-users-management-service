@@ -9,7 +9,6 @@ import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.model.User;
 import com.gtu.users_management_service.domain.repository.UserRepository;
 import com.gtu.users_management_service.domain.service.UserService;
-import com.gtu.users_management_service.infrastructure.email.EmailServiceImpl;
 import com.gtu.users_management_service.infrastructure.security.PasswordEncoderUtil;
 import com.gtu.users_management_service.infrastructure.security.PasswordValidator;
 
@@ -19,11 +18,10 @@ public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND = "User does not exist";
 
     private final UserRepository userRepository;
-    private final EmailServiceImpl emailService;
+  
 
-    public UserServiceImpl(UserRepository userRepository, EmailServiceImpl emailService) {
+    public UserServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.emailService = emailService;
     }
 
     @Override
@@ -43,20 +41,13 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email is already in use");
         }
-        String rawPassword = user.getPassword();
         String encodedPassword = PasswordEncoderUtil.encode(user.getPassword());
         user.setPassword(encodedPassword);
         
         user.setStatus(user.getStatus() != null ? user.getStatus() : Status.ACTIVE);
 
-        User savedUser = userRepository.save(user);
 
-        emailService.sendCredentials(
-                savedUser.getEmail(),
-                savedUser.getName(),
-                rawPassword
-        );
-        return savedUser;
+        return userRepository.save(user);
     }
 
     @Override
