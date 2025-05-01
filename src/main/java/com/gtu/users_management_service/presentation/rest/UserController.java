@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.application.dto.ResponseDTO;
 import com.gtu.users_management_service.application.dto.UserDTO;
 import com.gtu.users_management_service.application.usecase.UserUseCase;
@@ -63,5 +64,15 @@ public class UserController {
     public ResponseEntity<ResponseDTO<List<UserDTO>>> getUsersByRole(@RequestParam Role role) {
         List<UserDTO> users = userUseCase.getUsersByRole(role);
         return ResponseEntity.ok(new ResponseDTO<>("Users retrieved successfully", users, 200));
+    }
+
+    @PutMapping("/{id}/password")
+    @Operation(summary = "Update user password", description = "Update the password of an existing user.")
+    public ResponseEntity<ResponseDTO<UserDTO>> updatePassword(@PathVariable Long id, @Valid @RequestBody PasswordUpdateDTO passwordUpdateDTO) {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(id);
+        userDTO.setPassword(passwordUpdateDTO.getCurrentPassword());
+        UserDTO updatedUser= userUseCase.updatePassword(userDTO, passwordUpdateDTO);
+        return ResponseEntity.ok(new ResponseDTO<>("User password updated successfully", updatedUser, 200));
     }
 }

@@ -1,5 +1,6 @@
 package com.gtu.users_management_service.application.usecase;
 
+import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.application.dto.UserDTO;
 import com.gtu.users_management_service.application.mapper.UserMapper;
 import com.gtu.users_management_service.domain.model.Role;
@@ -33,5 +34,14 @@ public class UserUseCase {
 
     public List<UserDTO> getUsersByRole(Role role) {
         return UserMapper.toDTOList(userService.getUsersByRole(role));
+    }
+
+    public UserDTO updatePassword(UserDTO userDTO, PasswordUpdateDTO passwordUpdateDTO) {
+        return UserMapper.toDTO(
+            userService.updatePassword(
+                UserMapper.toDomain(userDTO),
+                passwordUpdateDTO
+            )
+        );
     }
 }
