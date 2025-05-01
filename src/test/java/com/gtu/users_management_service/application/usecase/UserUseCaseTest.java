@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.application.dto.UserDTO;
 import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.Status;
@@ -35,6 +36,7 @@ class UserUseCaseTest {
 
     private User user;
     private UserDTO userDto;
+    private PasswordUpdateDTO passwordUpdateDTO;
 
     @BeforeEach
     void setUp() {
@@ -182,5 +184,32 @@ class UserUseCaseTest {
         assertEquals("Invalid role", exception.getMessage());
         verify(userService, times(1)).getUsersByRole(null);
     }
-    
+
+    @Test
+    void updatePassword_Success() {
+        user.setPassword("NewPassw0rd");
+        when(userService.updatePassword(any(User.class), any(PasswordUpdateDTO.class))).thenReturn(user);
+        UserDTO result = userUseCase.updatePassword(userDto, passwordUpdateDTO);
+
+        assertNotNull(result);
+        assertEquals(user.getId(), result.getId());
+        assertEquals(user.getName(), result.getName());
+        assertEquals(user.getEmail(), result.getEmail());
+        assertEquals("NewPassw0rd", result.getPassword());
+
+        verify(userService, times(1)).updatePassword(any(User.class), any(PasswordUpdateDTO.class));
+    }
+
+    @Test
+    void updatePassword_InvalidCurrentPassword() {
+        when(userService.updatePassword(any(User.class), any(PasswordUpdateDTO.class)))
+                .thenThrow(new IllegalArgumentException("Invalid current password"));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userUseCase.updatePassword(userDto, passwordUpdateDTO);
+        });
+        assertEquals("Invalid current password", exception.getMessage());
+
+        verify(userService, times(1)).updatePassword(any(User.class), any(PasswordUpdateDTO.class));
+    }
 }

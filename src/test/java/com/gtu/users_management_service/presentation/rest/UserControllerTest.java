@@ -188,5 +188,4 @@ class UserControllerTest {
 
         verify(userUseCase, times(1)).getUsersByRole(Role.DRIVER);
     }
-
 }
