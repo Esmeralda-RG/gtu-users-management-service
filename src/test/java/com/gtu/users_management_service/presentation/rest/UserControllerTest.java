@@ -17,8 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.application.dto.UserDTO;
 import com.gtu.users_management_service.application.usecase.UserUseCase;
 import com.gtu.users_management_service.domain.model.Role;
@@ -43,6 +43,7 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
 
     private UserDTO userDto;
+    private PasswordUpdateDTO passwordUpdateDTO;
 
     @BeforeEach
     void setUp() {
@@ -60,6 +61,10 @@ class UserControllerTest {
         userDto.setPassword("Passw0rd");
         userDto.setRole(Role.ADMIN);
         userDto.setStatus(Status.ACTIVE);
+
+        passwordUpdateDTO = new PasswordUpdateDTO();
+        passwordUpdateDTO.setCurrentPassword("Passw0rd");
+        passwordUpdateDTO.setNewPassword("NewPassw0rd");
     }
 
     @Test
@@ -189,4 +194,42 @@ class UserControllerTest {
         verify(userUseCase, times(1)).getUsersByRole(Role.DRIVER);
     }
 
+    @Test
+    void updatePassword_Success() throws Exception {
+        UserDTO updatedUserDTO = new UserDTO();
+        updatedUserDTO.setId(1L);
+        updatedUserDTO.setName("John Doe");
+        updatedUserDTO.setEmail("johndoe@example.com");
+        updatedUserDTO.setPassword("NewPassw0rd");
+
+        when(userUseCase.updatePassword(any(UserDTO.class), any(PasswordUpdateDTO.class)))
+                .thenReturn(updatedUserDTO);
+
+        mockMvc.perform(put("/users/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(passwordUpdateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("User password updated successfully"))
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.data.id").value(updatedUserDTO.getId()))
+                .andExpect(jsonPath("$.data.name").value(updatedUserDTO.getName()))
+                .andExpect(jsonPath("$.data.email").value(updatedUserDTO.getEmail()))
+                .andExpect(jsonPath("$.data.password").value("NewPassw0rd"));
+
+        verify(userUseCase, times(1)).updatePassword(any(UserDTO.class), any(PasswordUpdateDTO.class));
+    }
+
+    @Test
+    void updatePassword_InvalidCurrentPassword() throws Exception {
+        when(userUseCase.updatePassword(any(UserDTO.class), any(PasswordUpdateDTO.class)))
+                .thenThrow(new IllegalArgumentException("Invalid current password"));
+
+        mockMvc.perform(put("/users/1/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(passwordUpdateDTO)))
+                .andExpect(status().isBadRequest()) 
+                .andExpect(jsonPath("$.message").value("Invalid current password"));
+
+        verify(userUseCase, times(1)).updatePassword(any(UserDTO.class), any(PasswordUpdateDTO.class));
+    }
 }
