@@ -55,6 +55,10 @@ class UserUseCaseTest {
         userDto.setPassword("Passw0rd");
         userDto.setRole(Role.ADMIN);
         userDto.setStatus(Status.ACTIVE);
+
+        passwordUpdateDTO = new PasswordUpdateDTO();
+        passwordUpdateDTO.setCurrentPassword("Passw0rd");
+        passwordUpdateDTO.setNewPassword("NewPassw0rd");
     }
 
     @Test
