@@ -27,9 +27,6 @@ class UserServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
-    @Mock
-
-
     @InjectMocks
     private UserServiceImpl userService;
 
