@@ -8,20 +8,23 @@ import com.gtu.users_management_service.domain.model.User;
 import com.gtu.users_management_service.domain.service.UserService;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 @RestController
 @RequestMapping("/internal/users")
 @Hidden
-public class UserController {
+public class UserInternalController {
     
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    public UserInternalController(UserService userService) {
         this.userService = userService;
     }
 
 
+    @GetMapping
     public User getUserByEmail(@RequestParam String email){
         return userService.getUserByEmail(email);
     }

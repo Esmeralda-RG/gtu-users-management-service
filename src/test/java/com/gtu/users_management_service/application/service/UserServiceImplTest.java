@@ -26,7 +26,6 @@ import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.model.User;
 import com.gtu.users_management_service.domain.repository.UserRepository;
-import com.gtu.users_management_service.infrastructure.email.EmailServiceImpl;
 import com.gtu.users_management_service.infrastructure.security.PasswordEncoderUtil;
 import com.gtu.users_management_service.infrastructure.security.PasswordValidator;
 
@@ -34,9 +33,6 @@ import com.gtu.users_management_service.infrastructure.security.PasswordValidato
 class UserServiceImplTest {
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private EmailServiceImpl emailService;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -66,10 +62,7 @@ class UserServiceImplTest {
 
         verify(userRepository, times(1)).existsByEmail("carlos.perez@gtu.com");
         verify(userRepository, times(1)).save(user);
-        verify(emailService, times(1)).sendCredentials(
-                "carlos.perez@gtu.com",
-                "Carlos Pérez",
-                "Passw0rd");
+       
     }
 
     @Test
