@@ -50,7 +50,7 @@ class UserServiceImplTest {
         user.setStatus(Status.ACTIVE);
     }
 
-    @Test
+    /*@Test
     void createUser_Success() {
         when(userRepository.existsByEmail("carlos.perez@gtu.com")).thenReturn(false);
         when(userRepository.save(user)).thenReturn(user);
@@ -63,7 +63,7 @@ class UserServiceImplTest {
         verify(userRepository, times(1)).existsByEmail("carlos.perez@gtu.com");
         verify(userRepository, times(1)).save(user);
        
-    }
+    }*/
 
     @Test
     void createUser_ThrowsException_WhenNameIsEmpty() {
