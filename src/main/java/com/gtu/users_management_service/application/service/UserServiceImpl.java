@@ -2,14 +2,18 @@ package com.gtu.users_management_service.application.service;
 
 import java.util.List;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.model.User;
 import com.gtu.users_management_service.domain.repository.UserRepository;
 import com.gtu.users_management_service.domain.service.UserService;
+import com.gtu.users_management_service.infrastructure.messaging.event.UserCreatedEvent;
 import com.gtu.users_management_service.infrastructure.security.PasswordEncoderUtil;
 import com.gtu.users_management_service.infrastructure.security.PasswordValidator;
 
@@ -19,11 +23,20 @@ public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND = "User does not exist";
 
     private final UserRepository userRepository;
-  
+    private final RabbitTemplate rabbitTemplate;
+    private final ObjectMapper objectMapper;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, RabbitTemplate rabbitTemplate, ObjectMapper objectMapper) {
+        this.rabbitTemplate = rabbitTemplate;
+        this.objectMapper = objectMapper;
         this.userRepository = userRepository;
     }
+
+    @Value("${rabbitmq.exchange.email}")
+    private String emailExchange;
+
+    @Value("${rabbitmq.routingkey.email}")
+    private String emailRoutingKey;
 
     @Override
     public User createUser(User user) {
@@ -36,19 +49,33 @@ public class UserServiceImpl implements UserService {
         if (!PasswordValidator.isValid(user.getPassword())) {
             throw new IllegalArgumentException("Password must contain at least 8 characters, including uppercase letters and numbers");
         }
-        if (user.getRole() == null && user.getRole() != Role.ADMIN && user.getRole() != Role.DRIVER) {
+        if (user.getRole() == null || (user.getRole() != Role.ADMIN && user.getRole() != Role.DRIVER)) {
             throw new IllegalArgumentException("Role cannot be null or invalid");
         }
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email is already in use");
         }
-        String encodedPassword = PasswordEncoderUtil.encode(user.getPassword());
+
+        String plainPassword = user.getPassword();
+        String encodedPassword = PasswordEncoderUtil.encode(plainPassword);
         user.setPassword(encodedPassword);
         
         user.setStatus(user.getStatus() != null ? user.getStatus() : Status.ACTIVE);
 
+        User savedUser = userRepository.save(user);
 
-        return userRepository.save(user);
+        try {
+            UserCreatedEvent event = new UserCreatedEvent();
+            event.setEmail(savedUser.getEmail());
+            event.setUsername(savedUser.getName());
+            event.setPassword(plainPassword); 
+            String message = objectMapper.writeValueAsString(event);
+            rabbitTemplate.convertAndSend(emailExchange, emailRoutingKey, message);
+        } catch (Exception e) {
+            System.err.println("Failed to publish UserCreatedEvent: " + e.getMessage());
+        }
+
+        return savedUser;
     }
 
     @Override

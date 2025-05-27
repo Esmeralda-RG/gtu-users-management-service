@@ -1,6 +1,9 @@
+version: '3.8'
 services:
   gtu-users-management-service:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: gtu-users-management-service
     environment:
       - EUREKA_SERVER_HOST=discovery-server
@@ -12,6 +15,10 @@ services:
       - DB_PASSWORD=password
       - SERVER_PORT=0
       - SWAGGER_SERVER_URL=${SWAGGER_SERVER_URL}
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=admin
+      - SPRING_RABBITMQ_PASSWORD=password
     networks:
       - shared_network
 networks:
