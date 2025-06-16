@@ -66,6 +66,13 @@ public class UserController {
         return ResponseEntity.ok(new ResponseDTO<>("Users retrieved successfully", users, 200));
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Get user by ID", description = "Retrieve a user by its unique identifier.")
+    public ResponseEntity<ResponseDTO<UserDTO>> getUserById(@PathVariable Long id) {
+        UserDTO user = userUseCase.getUserById(id);
+        return ResponseEntity.ok(new ResponseDTO<>("User retrieved successfully", user, 200));
+    }
+
     @PutMapping("/{id}/password")
     @Operation(summary = "Update user password", description = "Update the password of an existing user.")
     public ResponseEntity<ResponseDTO<UserDTO>> updatePassword(@PathVariable Long id, @Valid @RequestBody PasswordUpdateDTO passwordUpdateDTO) {

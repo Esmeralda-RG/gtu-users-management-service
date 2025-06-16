@@ -216,4 +216,32 @@ class UserUseCaseTest {
 
         verify(userService, times(1)).updatePassword(any(User.class), any(PasswordUpdateDTO.class));
     }
+
+    @Test
+    void getUserById_Success() {
+        when(userService.getUserById(1L)).thenReturn(user);
+        UserDTO result = userUseCase.getUserById(1L);
+
+        assertNotNull(result);
+        assertEquals(userDto.getId(), result.getId());
+        assertEquals(userDto.getName(), result.getName());
+        assertEquals(userDto.getEmail(), result.getEmail());
+        assertEquals(userDto.getPassword(), result.getPassword());
+        assertEquals(userDto.getRole(), result.getRole());
+        assertEquals(userDto.getStatus(), result.getStatus());
+
+        verify(userService, times(1)).getUserById(1L);
+    }
+
+    @Test
+    void getUserById_UserNotFound_ThrowsException() {
+        when(userService.getUserById(1L)).thenThrow(new IllegalArgumentException("User not found"));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            userUseCase.getUserById(1L);
+        });
+        assertEquals("User not found", exception.getMessage());
+
+        verify(userService, times(1)).getUserById(1L);
+    }
 }
