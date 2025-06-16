@@ -44,4 +44,8 @@ public class UserUseCase {
             )
         );
     }
+
+    public UserDTO getUserById(Long id){
+        return UserMapper.toDTO(userService.getUserById(id));
+    }
 }

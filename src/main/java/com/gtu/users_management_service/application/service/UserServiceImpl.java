@@ -1,6 +1,7 @@
 package com.gtu.users_management_service.application.service;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
+import com.gtu.users_management_service.domain.exception.ResourceNotFoundException;
 import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.model.User;
@@ -25,6 +27,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
+    private final Logger logger = Logger.getLogger(UserServiceImpl.class.getName());
 
     public UserServiceImpl(UserRepository userRepository, RabbitTemplate rabbitTemplate, ObjectMapper objectMapper) {
         this.rabbitTemplate = rabbitTemplate;
@@ -72,7 +75,7 @@ public class UserServiceImpl implements UserService {
             String message = objectMapper.writeValueAsString(event);
             rabbitTemplate.convertAndSend(emailExchange, emailRoutingKey, message);
         } catch (Exception e) {
-            System.err.println("Failed to publish UserCreatedEvent: " + e.getMessage());
+            logger.severe("Failed to send user created event: " + e.getMessage());
         }
 
         return savedUser;
@@ -134,5 +137,10 @@ public class UserServiceImpl implements UserService {
         }
         existingUser.setPassword(PasswordEncoderUtil.encode(passwordUpdateDTO.getNewPassword()));
         return userRepository.save(existingUser);
+    }
+
+    @Override
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
     }
 }

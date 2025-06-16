@@ -14,4 +14,5 @@ public interface UserService {
     List<User> getUsersByRole(Role role);
     User updatePassword(User user, PasswordUpdateDTO passwordUpdateDTO);
     User getUserByEmail(String email);
+    User getUserById(Long id);
 }
