@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.application.dto.UserDTO;
 import com.gtu.users_management_service.application.usecase.UserUseCase;
+import com.gtu.users_management_service.domain.exception.ResourceNotFoundException;
 import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.presentation.exception.GlobalExceptionHandler;
@@ -232,4 +233,46 @@ class UserControllerTest {
 
         verify(userUseCase, times(1)).updatePassword(any(UserDTO.class), any(PasswordUpdateDTO.class));
     }
+
+    
+    @Test
+        void getUserById_Success() throws Exception {
+                when(userUseCase.getUserById(1L)).thenReturn(userDto);
+        
+                mockMvc.perform(get("/users/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.message").value("User retrieved successfully"))
+                        .andExpect(jsonPath("$.data.id").value(userDto.getId()))
+                        .andExpect(jsonPath("$.data.name").value(userDto.getName()))
+                        .andExpect(jsonPath("$.data.email").value(userDto.getEmail()))
+                        .andExpect(jsonPath("$.data.role").value(userDto.getRole().name()))
+                        .andExpect(jsonPath("$.data.status").value(userDto.getStatus().name()));
+        
+                verify(userUseCase, times(1)).getUserById(1L);
+        }
+
+        @Test
+        void getUserById_NotFound() throws Exception {
+            when(userUseCase.getUserById(1L)).thenThrow(new ResourceNotFoundException("User not found"));
+
+            mockMvc.perform(get("/users/1")
+                    .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message").value("User not found"));
+
+            verify(userUseCase, times(1)).getUserById(1L);
+        }
+
+        @Test
+        void getUserById_InvalidId() throws Exception {
+            when(userUseCase.getUserById(1L)).thenThrow(new IllegalArgumentException("Invalid user ID"));
+
+            mockMvc.perform(get("/users/1")
+                    .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").value("Invalid user ID"));
+
+            verify(userUseCase, times(1)).getUserById(1L);
+        }
 }

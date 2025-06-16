@@ -22,6 +22,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
+import com.gtu.users_management_service.domain.exception.ResourceNotFoundException;
 import com.gtu.users_management_service.domain.model.Role;
 import com.gtu.users_management_service.domain.model.Status;
 import com.gtu.users_management_service.domain.model.User;
@@ -50,7 +51,7 @@ class UserServiceImplTest {
         user.setStatus(Status.ACTIVE);
     }
 
-    /*@Test
+    @Test
     void createUser_Success() {
         when(userRepository.existsByEmail("carlos.perez@gtu.com")).thenReturn(false);
         when(userRepository.save(user)).thenReturn(user);
@@ -63,7 +64,7 @@ class UserServiceImplTest {
         verify(userRepository, times(1)).existsByEmail("carlos.perez@gtu.com");
         verify(userRepository, times(1)).save(user);
        
-    }*/
+    }
 
     @Test
     void createUser_ThrowsException_WhenNameIsEmpty() {
@@ -319,5 +320,28 @@ class UserServiceImplTest {
             verify(userRepository, times(1)).findById(1L);
             verify(userRepository, never()).save(any());
         }
+    }
+
+    @Test
+    void getUserById_Success() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        User foundUser = userService.getUserById(1L);
+
+        assertNotNull(foundUser);
+        assertEquals("Carlos Pérez", foundUser.getName());
+        verify(userRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void getUserById_ThrowsException_WhenUserDoesNotExist() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        var exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> userService.getUserById(1L));
+
+        assertEquals("User does not exist", exception.getMessage());
+        verify(userRepository, times(1)).findById(1L);
     }
 }
