@@ -143,4 +143,19 @@ public class UserServiceImpl implements UserService {
     public User getUserById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
     }
+
+    @Override
+    public User resetPassword(User user, String newPassword) {
+        User existingUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND));
+
+        if (newPassword == null || newPassword.isEmpty()) {
+            throw new IllegalArgumentException("New password cannot be null or empty");
+        }
+        if (!PasswordValidator.isValid(newPassword)) {
+            throw new IllegalArgumentException("New password must contain at least 8 characters, including uppercase letters and numbers");
+        }
+        existingUser.setPassword(PasswordEncoderUtil.encode(newPassword));
+        return userRepository.save(existingUser);
+    }
 }

@@ -9,6 +9,8 @@ import com.gtu.users_management_service.domain.service.PassengerService;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 
 
 @RestController
@@ -26,10 +28,12 @@ public class PassengerInternalController {
     @GetMapping 
     public Passenger getPassengerByEmail(@RequestParam String email){
         return passengerService.getPassengerByEmail(email);
+    }  
+
+    @PutMapping("/{id}/reset-password")
+    public Passenger resetPassword(@PathVariable Long id, @RequestParam String newPassword) {
+        Passenger passenger = new Passenger();
+        passenger.setId(id);
+        return passengerService.resetPassword(passenger, newPassword);
     }
-
-
-
-
-    
 }
