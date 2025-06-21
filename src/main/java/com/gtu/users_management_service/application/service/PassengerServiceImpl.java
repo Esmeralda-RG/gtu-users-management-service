@@ -88,4 +88,19 @@ public class PassengerServiceImpl implements PassengerService {
        return passengerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE));
     }
+
+    @Override
+    public Passenger resetPassword(Passenger passenger, String newPassword) {
+        Passenger existingPassenger = passengerRepository.findById(passenger.getId())
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE));
+
+        if (newPassword == null || newPassword.isEmpty()) {
+            throw new IllegalArgumentException("New password cannot be null or empty");
+        }
+        if (!PasswordValidator.isValid(newPassword)) {
+            throw new IllegalArgumentException("New password must contain at least 8 characters, including uppercase letters and numbers");
+        }
+        existingPassenger.setPassword(PasswordEncoderUtil.encode(newPassword));
+        return passengerRepository.save(existingPassenger);
+    }
 }
