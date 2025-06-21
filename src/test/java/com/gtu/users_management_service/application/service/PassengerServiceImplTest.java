@@ -278,4 +278,94 @@ class PassengerServiceImplTest {
         assertEquals(5L, count);
         verify(passengerRepository, times(1)).count();
     }
+
+    @Test
+    void getPassengerByEmail_Success() {
+        when(passengerRepository.findByEmail("johndoe@example.com")).thenReturn(Optional.of(passenger));
+
+        Passenger result = passengerService.getPassengerByEmail("johndoe@example.com");
+
+        assertNotNull(result);
+        assertEquals("johndoe@example.com", result.getEmail());
+        verify(passengerRepository, times(1)).findByEmail("johndoe@example.com");
+    }
+
+    @Test
+    void getPassengerByEmail_NotFound() {
+        when(passengerRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            passengerService.getPassengerByEmail("notfound@example.com");
+        });
+
+        assertEquals("Passenger not found", exception.getMessage());
+        verify(passengerRepository, times(1)).findByEmail("notfound@example.com");
+    }
+
+    @Test
+    void resetPassword_Success() {
+        Passenger existingPassenger = new Passenger();
+        existingPassenger.setId(1L);
+        existingPassenger.setPassword("oldPassword");
+
+        when(passengerRepository.findById(1L)).thenReturn(Optional.of(existingPassenger));
+        when(passengerRepository.save(any(Passenger.class))).thenReturn(existingPassenger);
+
+        try (MockedStatic<PasswordValidator> validatorMock = Mockito.mockStatic(PasswordValidator.class);
+            MockedStatic<PasswordEncoderUtil> encoderMock = Mockito.mockStatic(PasswordEncoderUtil.class)) {
+
+            validatorMock.when(() -> PasswordValidator.isValid("NewPassw0rd")).thenReturn(true);
+            encoderMock.when(() -> PasswordEncoderUtil.encode("NewPassw0rd")).thenReturn("encodedNewPass");
+
+            Passenger result = passengerService.resetPassword(passenger, "NewPassw0rd");
+
+            assertNotNull(result);
+            assertEquals("encodedNewPass", result.getPassword());
+            verify(passengerRepository, times(1)).findById(1L);
+            verify(passengerRepository, times(1)).save(any(Passenger.class));
+        }
+    }
+
+    @Test
+    void resetPassword_PassengerNotFound() {
+        when(passengerRepository.findById(1L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            passengerService.resetPassword(passenger, "NewPassw0rd");
+        });
+
+        assertEquals("Passenger not found", exception.getMessage());
+        verify(passengerRepository, times(1)).findById(1L);
+        verify(passengerRepository, never()).save(any());
+    }
+
+    @Test
+    void resetPassword_InvalidNewPassword() {
+        when(passengerRepository.findById(1L)).thenReturn(Optional.of(passenger));
+
+        try (MockedStatic<PasswordValidator> passwordValidatorMock = Mockito.mockStatic(PasswordValidator.class)) {
+            passwordValidatorMock.when(() -> PasswordValidator.isValid("bad")).thenReturn(false);
+
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+                passengerService.resetPassword(passenger, "bad");
+            });
+
+            assertEquals("New password must contain at least 8 characters, including uppercase letters and numbers", exception.getMessage());
+            verify(passengerRepository, times(1)).findById(1L);
+            verify(passengerRepository, never()).save(any());
+        }
+    }
+
+    @Test
+    void resetPassword_NullNewPassword() {
+        when(passengerRepository.findById(1L)).thenReturn(Optional.of(passenger));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            passengerService.resetPassword(passenger, null);
+        });
+
+        assertEquals("New password cannot be null or empty", exception.getMessage());
+        verify(passengerRepository, times(1)).findById(1L);
+        verify(passengerRepository, never()).save(any());
+    }
 }

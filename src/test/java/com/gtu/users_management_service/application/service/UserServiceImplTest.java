@@ -344,4 +344,71 @@ class UserServiceImplTest {
         assertEquals("User does not exist", exception.getMessage());
         verify(userRepository, times(1)).findById(1L);
     }
+
+    @Test
+    void resetPassword_Success() {
+        User existingUser = new User();
+        existingUser.setId(1L);
+        existingUser.setPassword("encodedOldPass");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenReturn(existingUser);
+
+        try (MockedStatic<PasswordValidator> validatorMock = Mockito.mockStatic(PasswordValidator.class);
+            MockedStatic<PasswordEncoderUtil> encoderMock = Mockito.mockStatic(PasswordEncoderUtil.class)) {
+
+            validatorMock.when(() -> PasswordValidator.isValid("NewPassw0rd")).thenReturn(true);
+            encoderMock.when(() -> PasswordEncoderUtil.encode("NewPassw0rd")).thenReturn("encodedNewPassw0rd");
+
+            User result = userService.resetPassword(user, "NewPassw0rd");
+
+            assertNotNull(result);
+            assertEquals("encodedNewPassw0rd", result.getPassword());
+            verify(userRepository, times(1)).findById(1L);
+            verify(userRepository, times(1)).save(any(User.class));
+        }
+    }
+
+    @Test
+    void resetPassword_UserNotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            userService.resetPassword(user, "NewPassw0rd")
+        );
+
+        assertEquals("User does not exist", exception.getMessage());
+        verify(userRepository, times(1)).findById(1L);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void resetPassword_NullNewPassword() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+            userService.resetPassword(user, null)
+        );
+
+        assertEquals("New password cannot be null or empty", exception.getMessage());
+        verify(userRepository, times(1)).findById(1L);
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void resetPassword_InvalidNewPassword() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        try (MockedStatic<PasswordValidator> validatorMock = Mockito.mockStatic(PasswordValidator.class)) {
+            validatorMock.when(() -> PasswordValidator.isValid("bad")).thenReturn(false);
+
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                userService.resetPassword(user, "bad")
+            );
+
+            assertEquals("New password must contain at least 8 characters, including uppercase letters and numbers", exception.getMessage());
+            verify(userRepository, times(1)).findById(1L);
+            verify(userRepository, never()).save(any());
+        }
+    }
 }
