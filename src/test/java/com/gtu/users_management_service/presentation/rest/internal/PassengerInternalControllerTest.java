@@ -1,13 +1,21 @@
 package com.gtu.users_management_service.presentation.rest.internal;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gtu.users_management_service.domain.exception.ResourceNotFoundException;
 import com.gtu.users_management_service.domain.model.Passenger;
 import com.gtu.users_management_service.domain.service.PassengerService;
+import com.gtu.users_management_service.presentation.exception.GlobalExceptionHandler;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -17,14 +25,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.hamcrest.Matchers.is;
 
-@WebMvcTest(PassengerInternalController.class)
+@ExtendWith(MockitoExtension.class)
 class PassengerInternalControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private PassengerService passengerService;
+
+    @InjectMocks
+    private PassengerInternalController passengerInternalController;
+
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        objectMapper = new ObjectMapper();
+
+        mockMvc = MockMvcBuilders.standaloneSetup(passengerInternalController)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+                .build();
+    }
 
     @Test
     void getPassengerByEmail_ReturnsPassenger() throws Exception {
@@ -45,6 +67,20 @@ class PassengerInternalControllerTest {
     }
 
     @Test
+    void getPassengerByEmail_ReturnsNotFound_WhenPassengerDoesNotExist() throws Exception {
+        Mockito.when(passengerService.getPassengerByEmail("notfound@example.com"))
+            .thenThrow(new ResourceNotFoundException("Passenger not found with email: notfound@example.com"));
+
+        mockMvc.perform(get("/internal/passengers")
+                .param("email", "notfound@example.com"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Passenger not found with email: notfound@example.com"))
+            .andExpect(jsonPath("$.path").value("/internal/passengers"));
+    }
+
+    @Test
     void resetPassword_ReturnsUpdatedPassenger() throws Exception {
         Passenger passenger = new Passenger();
         passenger.setId(1L);
@@ -58,5 +94,35 @@ class PassengerInternalControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id", is(1)))
             .andExpect(jsonPath("$.password", is("NewPassw0rd")));
+    }
+
+    @Test
+    void resetPassword_ReturnsNotFound_WhenPassengerDoesNotExist() throws Exception {
+        Mockito.when(passengerService.resetPassword(any(Passenger.class), eq("noSuchPass")))
+            .thenThrow(new ResourceNotFoundException("Passenger not found with ID: 99"));
+
+        mockMvc.perform(put("/internal/passengers/99/reset-password")
+                .param("newPassword", "noSuchPass"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Not Found"))
+            .andExpect(jsonPath("$.message").value("Passenger not found with ID: 99"))
+            .andExpect(jsonPath("$.path").value("/internal/passengers/99/reset-password"));
+    }
+
+    @Test
+    void resetPassword_ReturnsBadRequest_WhenInvalidPassword() throws Exception {
+        Passenger passenger = new Passenger();
+        passenger.setId(1L);
+
+        Mockito.when(passengerService.resetPassword(any(Passenger.class), eq("123")))
+            .thenThrow(new IllegalArgumentException("Password too short"));
+
+        mockMvc.perform(put("/internal/passengers/1/reset-password")
+                .param("newPassword", "123"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Bad Request"))
+            .andExpect(jsonPath("$.message").value("Password too short"));
     }
 }
