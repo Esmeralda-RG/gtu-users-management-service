@@ -20,7 +20,7 @@ class PassengerServiceImplTest {
     @BeforeEach
     void setUp() {
         passengerRepository = mock(PassengerRepository.class);
-        passengerService = new PassengerServiceImpl(passengerRepository);
+        passengerService = new PassengerServiceImpl(passengerRepository, null);
     }
 
     @Test
