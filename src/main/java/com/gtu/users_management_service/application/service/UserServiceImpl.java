@@ -49,12 +49,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(User user) {
-        logPublisher.sendLog(
-                Instant.now().toString(),
-                "users-management-service",
-                "INFO",
-                "Creating user",
-                Map.of("name", user.getName(), "email", user.getEmail(), "role", user.getRole()));
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
         if (user.getName() == null || user.getName().isEmpty()) {
             throw new IllegalArgumentException("User name cannot be empty");
         }
@@ -71,6 +68,16 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email is already in use");
         }
+
+        logPublisher.sendLog(
+                Instant.now().toString(),
+                "users-management-service",
+                "INFO",
+                "Creating user",
+                Map.of(
+                        "name", user.getName() != null ? user.getName() : "",
+                        "email", user.getEmail() != null ? user.getEmail() : "",
+                        "role", user.getRole() != null ? user.getRole().toString() : ""));
 
         String plainPassword = user.getPassword();
         String encodedPassword = PasswordEncoderUtil.encode(plainPassword);

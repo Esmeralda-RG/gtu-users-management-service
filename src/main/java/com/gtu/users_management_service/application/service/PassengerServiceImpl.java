@@ -28,12 +28,9 @@ public class PassengerServiceImpl implements PassengerService {
 
     @Override
     public Passenger createPassenger(Passenger passenger) {
-        logPublisher.sendLog(
-                Instant.now().toString(),
-                "users-management-service",
-                "INFO",
-                "Creating passenger",
-                Map.of("name", passenger.getName(), "email", passenger.getEmail()));
+        if (passenger == null) {
+            throw new IllegalArgumentException("Passenger cannot be null");
+        }
         if (passenger.getName() == null || passenger.getName().isEmpty()) {
             throw new IllegalArgumentException("Name cannot be null or empty");
         }
@@ -47,6 +44,15 @@ public class PassengerServiceImpl implements PassengerService {
             throw new IllegalArgumentException(
                     "Password must contain at least 8 characters, including uppercase letters and numbers");
         }
+
+        logPublisher.sendLog(
+                Instant.now().toString(),
+                "users-management-service",
+                "INFO",
+                "Creating passenger",
+                Map.of(
+                        "name", passenger.getName() != null ? passenger.getName() : "",
+                        "email", passenger.getEmail() != null ? passenger.getEmail() : ""));
 
         passenger.setPassword(PasswordEncoderUtil.encode(passenger.getPassword()));
         return passengerRepository.save(passenger);
