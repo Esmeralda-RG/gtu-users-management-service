@@ -6,22 +6,34 @@ import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.domain.model.Passenger;
 import com.gtu.users_management_service.domain.repository.PassengerRepository;
 import com.gtu.users_management_service.domain.service.PassengerService;
+import com.gtu.users_management_service.infrastructure.logs.LogPublisher;
 import com.gtu.users_management_service.infrastructure.security.PasswordEncoderUtil;
 import com.gtu.users_management_service.infrastructure.security.PasswordValidator;
+
+import java.time.Instant;
+import java.util.Map;
 
 @Service
 public class PassengerServiceImpl implements PassengerService {
 
     private final PassengerRepository passengerRepository;
+    private final LogPublisher logPublisher;
 
     private static final String NOT_FOUND_MESSAGE = "Passenger not found";
 
-    public PassengerServiceImpl(PassengerRepository passengerRepository) {
+    public PassengerServiceImpl(PassengerRepository passengerRepository, LogPublisher logPublisher) {
         this.passengerRepository = passengerRepository;
+        this.logPublisher = logPublisher;
     }
 
     @Override
     public Passenger createPassenger(Passenger passenger) {
+        logPublisher.sendLog(
+                Instant.now().toString(),
+                "users-management-service",
+                "INFO",
+                "Creating passenger",
+                Map.of("name", passenger.getName(), "email", passenger.getEmail()));
         if (passenger.getName() == null || passenger.getName().isEmpty()) {
             throw new IllegalArgumentException("Name cannot be null or empty");
         }
@@ -32,15 +44,22 @@ public class PassengerServiceImpl implements PassengerService {
             throw new IllegalArgumentException("Email already exists");
         }
         if (!PasswordValidator.isValid(passenger.getPassword())) {
-            throw new IllegalArgumentException("Password must contain at least 8 characters, including uppercase letters and numbers");
+            throw new IllegalArgumentException(
+                    "Password must contain at least 8 characters, including uppercase letters and numbers");
         }
-        
+
         passenger.setPassword(PasswordEncoderUtil.encode(passenger.getPassword()));
         return passengerRepository.save(passenger);
     }
 
     @Override
     public Passenger updatePassenger(Passenger passenger) {
+        logPublisher.sendLog(
+                Instant.now().toString(),
+                "users-management-service",
+                "INFO",
+                "Updating passenger",
+                Map.of("id", passenger.getId(), "name", passenger.getName(), "email", passenger.getEmail()));
         Passenger existingPassenger = passengerRepository.findById(passenger.getId())
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE));
         if (passenger.getName() != null && !passenger.getName().isEmpty()) {
@@ -62,7 +81,7 @@ public class PassengerServiceImpl implements PassengerService {
     public Passenger updatePassword(Passenger passenger, PasswordUpdateDTO passwordUpdateDTO) {
         Passenger existingPassenger = passengerRepository.findById(passenger.getId())
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE));
-        if(passenger.getPassword() == null || passenger.getPassword().isEmpty()) {
+        if (passenger.getPassword() == null || passenger.getPassword().isEmpty()) {
             throw new IllegalArgumentException("Current password cannot be null or empty");
         }
         if (!PasswordEncoderUtil.matches(passenger.getPassword(), existingPassenger.getPassword())) {
@@ -72,7 +91,8 @@ public class PassengerServiceImpl implements PassengerService {
             throw new IllegalArgumentException("New password cannot be null or empty");
         }
         if (!PasswordValidator.isValid(passwordUpdateDTO.getNewPassword())) {
-            throw new IllegalArgumentException("New password must contain at least 8 characters, including uppercase letters and numbers");
+            throw new IllegalArgumentException(
+                    "New password must contain at least 8 characters, including uppercase letters and numbers");
         }
         existingPassenger.setPassword(PasswordEncoderUtil.encode(passwordUpdateDTO.getNewPassword()));
         return passengerRepository.save(existingPassenger);
@@ -85,7 +105,7 @@ public class PassengerServiceImpl implements PassengerService {
 
     @Override
     public Passenger getPassengerByEmail(String email) {
-       return passengerRepository.findByEmail(email)
+        return passengerRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE));
     }
 
@@ -98,7 +118,8 @@ public class PassengerServiceImpl implements PassengerService {
             throw new IllegalArgumentException("New password cannot be null or empty");
         }
         if (!PasswordValidator.isValid(newPassword)) {
-            throw new IllegalArgumentException("New password must contain at least 8 characters, including uppercase letters and numbers");
+            throw new IllegalArgumentException(
+                    "New password must contain at least 8 characters, including uppercase letters and numbers");
         }
         existingPassenger.setPassword(PasswordEncoderUtil.encode(newPassword));
         return passengerRepository.save(existingPassenger);
