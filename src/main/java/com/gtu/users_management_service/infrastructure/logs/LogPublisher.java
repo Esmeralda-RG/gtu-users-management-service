@@ -39,10 +39,8 @@ public class LogPublisher {
 
             amqpTemplate.convertAndSend(exchange, routingKey, logJson);
 
-            System.out.println("✅ Log sent successfully: " + logJson);
 
         } catch (Exception e) {
-            System.err.println("❌ Error while sending log: " + e.getMessage());
             e.printStackTrace();
         }
     }
