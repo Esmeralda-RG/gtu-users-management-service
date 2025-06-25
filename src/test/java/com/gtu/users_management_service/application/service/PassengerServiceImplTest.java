@@ -3,6 +3,7 @@ package com.gtu.users_management_service.application.service;
 import com.gtu.users_management_service.application.dto.PasswordUpdateDTO;
 import com.gtu.users_management_service.domain.model.Passenger;
 import com.gtu.users_management_service.domain.repository.PassengerRepository;
+import com.gtu.users_management_service.infrastructure.logs.LogPublisher;
 import com.gtu.users_management_service.infrastructure.security.PasswordEncoderUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,11 +17,13 @@ class PassengerServiceImplTest {
 
     private PassengerRepository passengerRepository;
     private PassengerServiceImpl passengerService;
+    private LogPublisher logPublisher;
 
     @BeforeEach
     void setUp() {
         passengerRepository = mock(PassengerRepository.class);
-        passengerService = new PassengerServiceImpl(passengerRepository);
+        logPublisher = mock(LogPublisher.class);
+        passengerService = new PassengerServiceImpl(passengerRepository, logPublisher);
     }
 
     @Test
@@ -115,7 +118,8 @@ class PassengerServiceImplTest {
 
         when(passengerRepository.findById(1L)).thenReturn(Optional.of(existing));
 
-        Exception ex = assertThrows(IllegalArgumentException.class, () -> passengerService.updatePassword(request, dto));
+        Exception ex = assertThrows(IllegalArgumentException.class,
+                () -> passengerService.updatePassword(request, dto));
         assertEquals("Current password is incorrect", ex.getMessage());
     }
 
@@ -136,7 +140,8 @@ class PassengerServiceImplTest {
         Passenger passenger = new Passenger(1L, "Test", "test@example.com", null);
         when(passengerRepository.findById(1L)).thenReturn(Optional.of(passenger));
 
-        Exception ex = assertThrows(IllegalArgumentException.class, () -> passengerService.resetPassword(passenger, "short"));
+        Exception ex = assertThrows(IllegalArgumentException.class,
+                () -> passengerService.resetPassword(passenger, "short"));
         assertTrue(ex.getMessage().contains("must contain at least"));
     }
 
@@ -161,8 +166,8 @@ class PassengerServiceImplTest {
     void shouldThrow_whenPassengerNotFoundByEmail() {
         when(passengerRepository.findByEmail("notfound@example.com")).thenReturn(Optional.empty());
 
-        Exception ex = assertThrows(IllegalArgumentException.class, () ->
-                passengerService.getPassengerByEmail("notfound@example.com"));
+        Exception ex = assertThrows(IllegalArgumentException.class,
+                () -> passengerService.getPassengerByEmail("notfound@example.com"));
         assertEquals("Passenger not found", ex.getMessage());
     }
 }
