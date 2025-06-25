@@ -1,6 +1,11 @@
 package com.gtu.users_management_service.application.service;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.gtu.users_management_service.infrastructure.logs.LogPublisher;
@@ -77,44 +82,72 @@ class UserServiceImplTest {
     }
 
     @Test
-    void createUser_ThrowsException_WhenEmailIsEmpty() {
-        user.setEmail("");
+    void createUser_shouldCreateWhenDataIsValid() throws Exception {
+        when(userRepository.existsByEmail("carlos.perez@gtu.com")).thenReturn(false);
+        when(userRepository.save(user)).thenReturn(user);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.createUser(user));
+        User createdUser = userService.createUser(user);
+
+        assertNotNull(createdUser);
+        assertEquals("Carlos Pérez", createdUser.getName());
+        assertEquals(Status.ACTIVE, createdUser.getStatus());
+        verify(userRepository).existsByEmail("carlos.perez@gtu.com");
+        verify(userRepository).save(user);
+        verify(logPublisher).sendLog(anyString(), eq("users-management-service"), eq("INFO"), eq("Creating user"),
+                argThat(map -> map.get("name").equals("Carlos Pérez") && map.get("email").equals("carlos.perez@gtu.com") && map.get("role").equals(Role.ADMIN.toString())));
+    }
+
+    @Test
+    void createUser_shouldThrowWhenUserIsNull() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.createUser(null));
+        assertEquals("User cannot be null", exception.getMessage());
+    }
+
+    @Test
+    void createUser_shouldThrowWhenNameIsEmpty() {
+        user.setName("");
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
+        assertEquals("User name cannot be empty", exception.getMessage());
+    }
+
+    @Test
+    void createUser_shouldThrowWhenEmailIsEmpty() {
+        user.setEmail("");
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
         assertEquals("Email cannot be empty", exception.getMessage());
     }
 
     @Test
-    void createUser_ThrowsException_WhenPasswordIsInvalid() {
+    void createUser_shouldThrowWhenPasswordIsInvalid() {
         user.setPassword("short");
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.createUser(user));
-        assertEquals("Password must contain at least 8 characters, including uppercase letters and numbers",
-                exception.getMessage());
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
+        assertEquals("Password must contain at least 8 characters, including uppercase letters and numbers", exception.getMessage());
     }
 
     @Test
-    void createUser_ThrowsException_WhenRoleIsNull() {
+    void createUser_shouldThrowWhenRoleIsNull() {
         user.setRole(null);
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.createUser(user));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
         assertEquals("Role cannot be null or invalid", exception.getMessage());
     }
 
     @Test
-    void createUser_ThrowsException_WhenEmailAlreadyExists() {
+    void createUser_shouldThrowWhenEmailAlreadyExists() {
         when(userRepository.existsByEmail("carlos.perez@gtu.com")).thenReturn(true);
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> userService.createUser(user));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
         assertEquals("Email is already in use", exception.getMessage());
+    }
+
+    @Test
+    void createUser_shouldLogErrorWhenRabbitMQFails() throws Exception {
+        when(userRepository.existsByEmail("carlos.perez@gtu.com")).thenReturn(false);
+        when(userRepository.save(user)).thenReturn(user);
+
+        User createdUser = userService.createUser(user);
+
+        assertNotNull(createdUser);
+        verify(userRepository).save(user);
+        verify(logPublisher).sendLog(anyString(), eq("users-management-service"), eq("INFO"), eq("Creating user"), anyMap());
     }
 
     @Test
@@ -414,5 +447,27 @@ class UserServiceImplTest {
             verify(userRepository, times(1)).findById(1L);
             verify(userRepository, never()).save(any());
         }
+    }
+
+    @Test
+    void getUserByEmail_Success() {
+        when(userRepository.findByEmail("carlos.perez@gtu.com")).thenReturn(Optional.of(user));
+
+        User result = userService.getUserByEmail("carlos.perez@gtu.com");
+
+        assertNotNull(result);
+        assertEquals("Carlos Pérez", result.getName());
+        verify(userRepository, times(1)).findByEmail("carlos.perez@gtu.com");
+    }
+
+    @Test
+    void getUserByEmail_ThrowsException_WhenUserNotFound() {
+        when(userRepository.findByEmail("missing@gtu.com")).thenReturn(Optional.empty());
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userService.getUserByEmail("missing@gtu.com"));
+
+        assertEquals("User does not exist", exception.getMessage());
+        verify(userRepository, times(1)).findByEmail("missing@gtu.com");
     }
 }

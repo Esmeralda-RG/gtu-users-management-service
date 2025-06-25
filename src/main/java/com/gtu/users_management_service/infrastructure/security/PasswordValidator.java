@@ -6,6 +6,10 @@ public class PasswordValidator {
 
     private static final int MIN_LENGTH = 8;
 
+    private PasswordValidator() {
+        // Private constructor to prevent instantiation
+    }
+
     public static boolean isValid(String password) {
         if (password == null || password.length() < MIN_LENGTH) return false;
 

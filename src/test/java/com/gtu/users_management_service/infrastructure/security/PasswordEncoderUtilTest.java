@@ -12,7 +12,7 @@ class PasswordEncoderUtilTest {
         String encoded = PasswordEncoderUtil.encode(rawPassword);
 
         assertNotNull(encoded);
-        assertNotEquals(rawPassword, encoded); // bcrypt no debe devolver el texto plano
+        assertNotEquals(rawPassword, encoded); 
     }
 
     @Test
@@ -29,5 +29,21 @@ class PasswordEncoderUtilTest {
         String encoded = PasswordEncoderUtil.encode("OtherPassword");
 
         assertFalse(PasswordEncoderUtil.matches(rawPassword, encoded));
+    }
+
+    @Test
+    void shouldEncodeEmptyPassword() {
+        String encoded = PasswordEncoderUtil.encode("");
+        assertNotNull(encoded);
+        assertFalse(encoded.isEmpty());
+    }
+
+    @Test
+    void shouldGenerateDifferentHashesForSamePassword() {
+        String rawPassword = "Password123";
+        String encoded1 = PasswordEncoderUtil.encode(rawPassword);
+        String encoded2 = PasswordEncoderUtil.encode(rawPassword);
+
+        assertNotEquals(encoded1, encoded2); 
     }
 }

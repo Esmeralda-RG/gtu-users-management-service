@@ -41,7 +41,7 @@ public class LogPublisher {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            // Handle the exception (e.g., log it)
         }
     }
 
