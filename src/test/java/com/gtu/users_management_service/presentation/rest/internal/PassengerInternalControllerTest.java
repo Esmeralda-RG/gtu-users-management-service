@@ -1,6 +1,7 @@
 package com.gtu.users_management_service.presentation.rest.internal;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gtu.users_management_service.application.dto.PassengerDTO;
 import com.gtu.users_management_service.domain.exception.ResourceNotFoundException;
 import com.gtu.users_management_service.domain.model.Passenger;
 import com.gtu.users_management_service.domain.service.PassengerService;
@@ -21,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.hamcrest.Matchers.is;
@@ -125,4 +127,52 @@ class PassengerInternalControllerTest {
             .andExpect(jsonPath("$.error").value("Bad Request"))
             .andExpect(jsonPath("$.message").value("Password too short"));
     }
+
+    @Test
+    void postMethodName_CreatesPassengerSuccessfully() throws Exception {
+        PassengerDTO passengerDTO = new PassengerDTO();
+        passengerDTO.setId(2L);
+        passengerDTO.setName("Alice");
+        passengerDTO.setEmail("alice@example.com");
+        passengerDTO.setPassword("StrongPass123");
+
+        Passenger createdPassenger = new Passenger(
+            passengerDTO.getId(),
+            passengerDTO.getName(),
+            passengerDTO.getEmail(),
+            passengerDTO.getPassword()
+        );
+
+        Mockito.when(passengerService.createPassenger(any(Passenger.class)))
+            .thenReturn(createdPassenger);
+
+        mockMvc.perform(post("/internal/passengers")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(passengerDTO)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id", is(2)))
+            .andExpect(jsonPath("$.name", is("Alice")))
+            .andExpect(jsonPath("$.email", is("alice@example.com")))
+            .andExpect(jsonPath("$.password", is("StrongPass123")));
+    }
+
+    @Test
+    void postMethodName_ReturnsBadRequest_WhenInvalidInput() throws Exception {
+        PassengerDTO passengerDTO = new PassengerDTO();
+        passengerDTO.setId(3L);
+        passengerDTO.setEmail("invalid@example.com");
+        passengerDTO.setPassword("pass");
+
+        Mockito.when(passengerService.createPassenger(any(Passenger.class)))
+            .thenThrow(new IllegalArgumentException("Name is required"));
+
+        mockMvc.perform(post("/internal/passengers")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(passengerDTO)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Bad Request"))
+            .andExpect(jsonPath("$.message").value("Name is required"));
+    }
 }
+
