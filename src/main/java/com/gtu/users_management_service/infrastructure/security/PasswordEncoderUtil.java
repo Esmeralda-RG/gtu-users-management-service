@@ -7,6 +7,10 @@ public class PasswordEncoderUtil {
 
     private static final PasswordEncoder encoder = new BCryptPasswordEncoder();
 
+    private PasswordEncoderUtil() {
+        // Private constructor to prevent instantiation
+    }
+
     public static String encode(String rawPassword) {
         return encoder.encode(rawPassword);
     }

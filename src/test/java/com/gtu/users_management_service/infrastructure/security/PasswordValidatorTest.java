@@ -13,7 +13,7 @@ class PasswordValidatorTest {
 
     @Test
     void shouldReturnFalse_whenPasswordIsTooShort() {
-        assertFalse(PasswordValidator.isValid("A1b")); // menos de 8 caracteres
+        assertFalse(PasswordValidator.isValid("A1b")); 
     }
 
     @Test
@@ -34,5 +34,30 @@ class PasswordValidatorTest {
     @Test
     void shouldReturnTrue_whenPasswordMeetsAllCriteria() {
         assertTrue(PasswordValidator.isValid("Password1"));
+    }
+
+    @Test
+    void shouldReturnTrue_whenPasswordIsExactlyMinLength() {
+        assertTrue(PasswordValidator.isValid("A1bcdefg")); 
+    }
+
+    @Test
+    void shouldReturnTrue_whenPasswordIsLongerThanMinLength() {
+        assertTrue(PasswordValidator.isValid("A1bcdefghijklmnop"));
+    }
+
+    @Test
+    void shouldReturnTrue_whenPasswordContainsSpecialCharacters() {
+        assertTrue(PasswordValidator.isValid("A1b@cdef"));
+    }
+
+    @Test
+    void shouldReturnFalse_whenPasswordLacksUppercaseAndDigit() {
+        assertFalse(PasswordValidator.isValid("password"));
+    }
+
+    @Test
+    void shouldReturnFalse_whenPasswordLacksLowercaseAndDigit() {
+        assertFalse(PasswordValidator.isValid("PASSWORD"));
     }
 }
