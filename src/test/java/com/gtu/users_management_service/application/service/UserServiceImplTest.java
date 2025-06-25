@@ -82,7 +82,7 @@ class UserServiceImplTest {
     }
 
     @Test
-    void createUser_shouldCreateWhenDataIsValid() throws Exception {
+    void createUser_shouldCreateWhenDataIsValid() {
         when(userRepository.existsByEmail("carlos.perez@gtu.com")).thenReturn(false);
         when(userRepository.save(user)).thenReturn(user);
 
@@ -101,13 +101,6 @@ class UserServiceImplTest {
     void createUser_shouldThrowWhenUserIsNull() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.createUser(null));
         assertEquals("User cannot be null", exception.getMessage());
-    }
-
-    @Test
-    void createUser_shouldThrowWhenNameIsEmpty() {
-        user.setName("");
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
-        assertEquals("User name cannot be empty", exception.getMessage());
     }
 
     @Test

@@ -14,7 +14,7 @@ import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(MockitoExtension.class)
-public class LogPublisherTest {
+class LogPublisherTest {
 
     @Mock
     private AmqpTemplate amqpTemplate;
